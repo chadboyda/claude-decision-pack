@@ -1,0 +1,80 @@
+{
+ "project": "sample",
+ "title": "Sample pack",
+ "template_version": "0.1.0",
+ "artifact_url": null,
+ "owner_session": null,
+ "done_without_asking": [
+  {"text": "Turned on the beta page", "words": "turn flags on when live", "date_local": "Nov 3, 2026", "source": "ledger"}
+ ],
+ "fyi": [
+  {"title": "Merge order", "shot": {"role": "diagram", "width": 1440, "kind": "diagram", "path": "{FIX}/strip.png", "viewed": true, "px": [800, 200], "callouts": []}}
+ ],
+ "decisions": [
+  {
+   "id": "Q-1", "order": 1, "version": 1,
+   "title": "Reminder emails: start with a set date?",
+   "bluf": "I recommend A: customers see the date and can skip it.",
+   "door": "two_way", "gate": "none", "changes_ui": true,
+   "default_key": "A", "default_at": "2026-11-18T23:00:00Z", "default_at_local": "Wed Nov 18 6:00 PM EST",
+   "cost_of_wait": "Reminders wait for a click.",
+   "impact": "About 40 customers a week.", "unknowns": "How often customers undo it.",
+   "details_md": "Evidence: https://example.com/pr/1",
+   "no_visual_reason": null,
+   "history_check": {"searched": ["decisions.jsonl"], "result": "none", "quote": null, "quote_date_local": null, "at": "2026-11-16T17:00:00Z"},
+   "status": "open", "outcome": null, "synced_answer_at": null,
+   "options": [
+    {"key": "A", "button": "Set a date", "result": "Reminder sends in 2 days unless skipped.", "undo": "easy", "recommended": true,
+     "shots": [
+      {"role": "option-A", "width": 1440, "kind": "real_ui", "path": "{FIX}/ui-a-1440.png", "viewed": true, "px": [1440, 900],
+       "callouts": [{"n": 1, "box": [80, 120, 600, 300], "note": "The date line customers see"},
+                    {"n": 3, "box": [80, 480, 1280, 200], "note": "Skip stops the date"}]},
+      {"role": "option-A", "width": 390, "kind": "real_ui", "path": "{FIX}/ui-a-390.png", "viewed": true, "px": [390, 844],
+       "callouts": [{"n": 1, "box": [16, 80, 358, 240], "note": "The date line customers see"}]}
+     ]},
+    {"key": "B", "button": "No date", "result": "Reminder waits for the customer's click.", "undo": "easy",
+     "shots": [
+      {"role": "option-B", "width": 1440, "kind": "real_ui", "path": "{FIX}/ui-b-1440.png", "viewed": true, "px": [1440, 900], "callouts": []},
+      {"role": "option-B", "width": 390, "kind": "real_ui", "path": "{FIX}/ui-b-390.png", "viewed": true, "px": [390, 844], "callouts": []}
+     ]}
+   ]
+  },
+  {
+   "id": "Q-2", "order": 2, "version": 1,
+   "title": "New tiers on Starter and Pro?",
+   "bluf": "I recommend A: Pro only, where prices are already locked.",
+   "door": "two_way", "gate": "none",
+   "default_key": null, "default_at": null, "default_at_local": null,
+   "cost_of_wait": "Tier requests stay refused.",
+   "history_check": {"searched": ["decisions.jsonl"], "result": "doubtful", "quote": "only Pro for now", "quote_date_local": "Nov 6, 2026", "quote_choice_key": "A", "at": "2026-11-16T17:00:00Z"},
+   "status": "open", "outcome": null, "synced_answer_at": null,
+   "no_visual_reason": "A cost call with no screen change.",
+   "options": [
+    {"key": "A", "button": "Pro only", "result": "Pro customers can add tiers.", "undo": "easy", "recommended": true, "shots": []},
+    {"key": "B", "button": "Both", "result": "Starter and Pro customers can add tiers.", "undo": "easy", "shots": []},
+    {"key": "C", "button": "Neither", "result": "Only staff add tiers.", "undo": "easy", "shots": []}
+   ],
+   "shots": [
+    {"role": "chart", "width": 1440, "kind": "fact_strip", "path": "{FIX}/strip.png", "viewed": true, "px": [800, 200], "callouts": []}
+   ]
+  },
+  {
+   "id": "Q-3", "order": 3, "version": 1,
+   "title": "Turn on the 4 switches?",
+   "bluf": "I recommend A: the code is live and off.",
+   "door": "one_way", "gate": "none",
+   "default_key": null, "default_at": null, "default_at_local": null,
+   "cost_of_wait": "Customers get no reminders.",
+   "history_check": {"searched": ["decisions.jsonl"], "result": "none", "quote": null, "quote_date_local": null, "at": "2026-11-16T17:00:00Z"},
+   "status": "open", "outcome": null, "synced_answer_at": null,
+   "no_visual_reason": "Switches have no screen of their own.",
+   "options": [
+    {"key": "A", "button": "Turn on", "result": "Reminders start tomorrow 9 AM.", "undo": "hard", "recommended": true, "shots": []},
+    {"key": "B", "button": "Wait", "result": "Nothing changes.", "undo": "easy", "shots": []}
+   ],
+   "shots": [
+    {"role": "diagram", "width": 1440, "kind": "diagram", "path": "{FIX}/strip.png", "viewed": true, "px": [800, 200], "callouts": []}
+   ]
+  }
+ ]
+}
