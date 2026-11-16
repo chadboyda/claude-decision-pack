@@ -43,10 +43,14 @@ Spec: `SPEC.md`. How Claude runs it: `skills/decision-pack/SKILL.md`.
   On a Claude Code build without hooks-module support, the skill and both command hooks still work.
 
 ## Install
-From a marketplace that lists this plugin:
+This repo is its own marketplace. In Claude Code 2.1.275 or later, one line:
 ```
-claude plugin marketplace add <marketplace repo or path>
-claude plugin install decision-pack@<marketplace>
+/plugin install decision-pack --marketplace chadboyda/claude-decision-pack
+```
+On older versions:
+```
+claude plugin marketplace add chadboyda/claude-decision-pack
+claude plugin install decision-pack@decision-pack
 ```
 Then `/reload-plugins` in an open session. To try it without installing:
 `claude --plugin-dir /path/to/decision-pack`.
