@@ -1,7 +1,8 @@
 {
   "name": "decision-pack",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "When Claude needs your input, feedback or a decision, it builds one private page per project: one card per decision with Claude's pick, a picture per option with numbered callouts, big answer buttons, a note box and tap-to-point on the picture. Answers save as you tap and come back to the session with their context. /decision-pack lists packs.",
+  "license": "MIT",
   "author": {
     "name": "decision-pack contributors"
   }

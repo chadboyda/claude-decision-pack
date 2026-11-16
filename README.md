@@ -29,6 +29,19 @@ Spec: `SPEC.md`. How Claude runs it: `skills/decision-pack/SKILL.md`.
   EST · 1 not closed", UI only) and `/decision-pack [status | sync <project> | due | local <project>]`.
 - Tests: `cd lib && python3 -m pytest -q test_page.py test_dp.py` (unit tests plus headless page tests).
 
+## Requirements
+- Claude Code with the claude.ai Artifact, ArtifactData and ArtifactComments tools. Publishing,
+  seeding and reading answers back all go through them. Without them, `decision-pack local <project>`
+  still writes a view-only copy to open in a browser, and answers come in through chat (`ingest`).
+- The `artifact-capabilities` and `artifact-design` skills, when installed, are loaded before the
+  first publish. The skill skips them when they are missing.
+- Python 3 with Pillow for `mark`, `pair`, `crop` and `shrink`; Playwright with Chromium for
+  `shoot`. Every entry point runs `python3 -I`, which ignores user site-packages and `PYTHONPATH`,
+  so install Pillow and Playwright into the interpreter's own site-packages
+  (`python3 -m pip install pillow playwright`, not `--user`).
+- The status line and the `/decision-pack` command come from the hooks module `hooks/register.ts`.
+  On a Claude Code build without hooks-module support, the skill and both command hooks still work.
+
 ## Install
 From a marketplace that lists this plugin:
 ```
@@ -62,11 +75,12 @@ Config file: `${XDG_CONFIG_HOME:-~/.config}/decision-pack/config.json`
 | `memory_dir` | `DP_MEMORY_DIR` | off | A folder of markdown notes `check` searches for earlier decisions. |
 | `transcripts_dir` | `DP_TRANSCRIPTS_DIR` | off | A Claude Code transcript folder (`*.jsonl`); `check` searches your own turns in it. |
 | `todo_watch_bin` | `DP_TW_BIN` | off | Path to a Todo Watch `tw` CLI. When set, decided cards close their linked task. |
+| `stop_hook` | `DP_STOP_HOOK` | on | `"off"` turns off the Stop hook. It runs in every project once the plugin is enabled. |
 
 Paths accept `~` and `$VARS`. An unset optional key turns that feature off cleanly: `check` skips the
 source, `record` skips the ledger line or task close, and nothing reports as "not closed" because of it.
 
-Other switches: `DP_STOP_HOOK=off` turns off the Stop hook; `DP_NOW` (UTC ISO) fixes "now" for tests.
+Other switches: `DP_NOW` (UTC ISO) fixes "now" for tests.
 
 ## Data
 Under `home`:

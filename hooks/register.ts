@@ -4,7 +4,7 @@ import type { On } from 'claude-code'
  * decision-pack's mod half. It shows the open decisions under the prompt
  * ("Decisions: 3 open · next due 5:00 PM EST · 1 not closed") and answers `/decision-pack`.
  * The status line is UI only: the model never sees it. What the model sees at session start, and the
- * Stop check for chat questions, are plain settings.json command hooks (`decision-pack hook
+ * Stop check for chat questions, are command hooks in hooks/hooks.json (`decision-pack hook
  * session-start`, `decision-pack hook stop`; README "Hooks").
  *
  * `/decision-pack due` only reports what is past due: defaults apply inside `sync-plan --apply`,

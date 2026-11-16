@@ -2,6 +2,10 @@
 
 Every card shows what changes. The user answers from the picture, so it must look like production.
 
+Subagents may shoot, mark, crop, shrink and lint. Only the main session uploads or publishes.
+
+The diagram and chart rows follow the `artifact-diagramming` and `dataviz` skills when those are installed; without them, keep plain words, high contrast and one highlighted series.
+
 | The decision changes… | `kind` | How |
 |---|---|---|
 | A live page or UI | `pair` (or `before` + `after` shots) | `decision-pack shoot` prod/CI for before, dev/CI build for after, then `decision-pack pair` |

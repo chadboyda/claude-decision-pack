@@ -1,4 +1,4 @@
-"""Shared page setup for shoot.py and probe.py: real User-Agents, phone emulation under 768px,
+"""Shared page setup for shoot.py (upstream also shares it with a probe.py that is not vendored here): real User-Agents, phone emulation under 768px,
 a load fallback for pages that never go network-idle, a signed-in session (--storage-state) and
 pre-shot actions (--before-shot) so hover, open-menu, focus and typed states can be captured."""
 import contextlib

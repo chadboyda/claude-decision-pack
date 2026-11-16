@@ -1454,7 +1454,7 @@ def asks_in_chat(text):
 def hook_stop(hook_input):
     """Stop hook: flag a final message that asks the user a question in chat with no pack link. Blocks once;
     stop_hook_active (set on the retry) lets the turn end, so it can never loop."""
-    if hook_input.get("stop_hook_active") or os.environ.get("DP_STOP_HOOK") == "off":
+    if hook_input.get("stop_hook_active") or str(setting("DP_STOP_HOOK", "stop_hook") or "").lower() == "off":
         return None
     if not asks_in_chat(last_assistant_text(hook_input)):
         return None

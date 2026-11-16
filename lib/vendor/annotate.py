@@ -4,7 +4,7 @@
 mark: draw numbered boxes (and an optional legend) on one screenshot.
   python3 annotate.py mark IN.png CALLOUTS.json OUT.png [--legend] [--color "#E5484D"]
   CALLOUTS.json: [{"n": 1, "box": [x, y, w, h], "note": "Price blends into the list"}]
-  Box coordinates are page CSS px. shoot.py/probe.py shoot at device scale 1, so CSS px == image px.
+  Box coordinates are page CSS px. shoot.py shoots at device scale 1, so CSS px == image px.
   For a screenshot taken at another devicePixelRatio (shoot.py --dpr 2, Chrome on a Retina screen),
   pass --scale <devicePixelRatio> and the boxes are multiplied to match. The viewport shot covers
   only page y 0..844 (390) or 0..900 (1440): mark anything lower on <name>-W-full.png. A box mostly

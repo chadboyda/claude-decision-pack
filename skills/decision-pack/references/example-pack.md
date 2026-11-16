@@ -10,7 +10,7 @@ After: `<home>/billing-revamp/pack.json`, six cards plus one FYI picture.
 | 2. New tiers on Starter and Pro | Q-2 "New tiers on Starter and Pro?" | Real pricing card; callout 6 on the button customers get refused on | two-way, needs a tap |
 | 3. Five of 36 checks still fail | Q-3 "Five of 36 checks still fail: fix now or later?" | 36-cell grid, the 5 failures outlined and numbered | two-way, A by default |
 | 4a. Create a digest channel | Q-4 "Create a channel for the daily digest?" | The digest rendered from its real payload | two-way, needs a tap |
-| 4b. Rerun 3 test jobs | Q-5 "Rerun the 3 test jobs (about $2.25)?" | Fact strip of the three costs; "You may have answered this on Sep 30" | two-way, A by default |
+| 4b. Rerun 3 test jobs | Q-5 "Rerun the 3 test jobs (about $2.25)?" | Fact strip of the three costs; "You said yes to A on Sep 30" | two-way, A by default |
 | 4c. Switches | Q-6 "Turn on the 4 billing switches?" | Admin page at 1440 and 390, customer home card | one-way, needs a tap |
 | Merge order | FYI | 7-step diagram, no buttons | none |
 

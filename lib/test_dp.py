@@ -23,7 +23,7 @@ FIX = HERE / "fixtures"
 # Optional: point DP_TW_PARSER_DIR at a Todo Watch daemon folder (holding detail.py) to run its real parser.
 TW_DETAIL = Path(os.environ["DP_TW_PARSER_DIR"]) if os.environ.get("DP_TW_PARSER_DIR") else None
 ENV_KEYS = ("DECISION_PACK_HOME", "XDG_CONFIG_HOME", "DP_TIMEZONE", "DP_LEDGER", "DP_MEMORY_DIR",
-            "DP_TRANSCRIPTS_DIR", "DP_NOW", "DP_TW_BIN")
+            "DP_TRANSCRIPTS_DIR", "DP_NOW", "DP_TW_BIN", "DP_STOP_HOOK")
 
 
 def isolate(tmp):
@@ -37,6 +37,7 @@ def isolate(tmp):
     os.environ["DP_TRANSCRIPTS_DIR"] = str(Path(tmp) / "transcripts")
     os.environ["DP_TW_BIN"] = "/bin/false"
     os.environ.pop("DP_NOW", None)
+    os.environ.pop("DP_STOP_HOOK", None)
     return old
 
 
@@ -635,6 +636,22 @@ class TestReviewFixes(Base):
         r = subprocess.run([sys.executable, str(HERE / "dp.py"), "hook", "stop"], input=json.dumps({"last_assistant_message": "All done."}),
                            capture_output=True, text=True, env=dict(os.environ))
         self.assertEqual((r.returncode, r.stdout), (0, ""))
+
+    def test_stop_hook_off_switch(self):
+        ask = {"last_assistant_message": "Which one do you prefer, A or B?"}
+        os.environ["DP_STOP_HOOK"] = "off"
+        try:
+            self.assertIsNone(dp.hook_stop(ask))
+        finally:
+            os.environ.pop("DP_STOP_HOOK")
+        cfg = dp.config_path()
+        cfg.parent.mkdir(parents=True, exist_ok=True)
+        cfg.write_text(json.dumps({"stop_hook": "off"}))
+        try:
+            self.assertIsNone(dp.hook_stop(ask))
+        finally:
+            cfg.unlink()
+        self.assertEqual(dp.hook_stop(ask)["decision"], "block")
 
     def test_session_start_hook(self):
         self.assertEqual(dp.hook_session_start(), "")
