@@ -11,6 +11,7 @@ Run `decision-pack <command> --help` for each command. SPEC.md is the source of 
 import argparse
 import datetime as dt
 import glob
+import io
 import json
 import math
 import os
@@ -31,7 +32,7 @@ TEMPLATE_VERSION = "0.1.0"
 USER_SOURCES = ("page", "todo-watch", "chat", "comment", "default")
 UI_KINDS = ("real_ui", "mock", "pair")
 UI_GATES = ("checkout", "pricing", "new_visual", "sign_in")
-MAX_PNG = 600 * 1024
+MAX_SHOT = 600 * 1024
 BATCH_WRITES = 50
 BATCH_BYTES = 1024 * 1024 - 16 * 1024  # leave room for the envelope
 OK_WORDS = {"ok", "okay", "k", "yes", "yep", "yeah", "sure", "nice", "looks good", "lgtm", "ship it",
@@ -587,7 +588,7 @@ def lint_shots(errors, did, shots):
         if not os.path.isfile(p):
             errors.append(f"{did}: missing file {p}")
         else:
-            if os.path.getsize(p) > MAX_PNG:
+            if os.path.getsize(p) > MAX_SHOT:
                 errors.append(f"{did}: {p} is {os.path.getsize(p) // 1024} KB, over 600 KB (run: decision-pack shrink)")
         if not s.get("viewed"):
             errors.append(f"{did}: shot {p} not viewed (Read the PNG, then: decision-pack viewed {did} {p})")
@@ -1057,19 +1058,100 @@ def png_size(p):
         return list(im.size)
 
 
-def shrink(p, max_kb=600, width=None, crop_height=None):
+# More unique colors than this reads as photographic (gradients, photos, hero art): a 256-color palette bands it.
+PHOTO_COLORS = 4096
+PNG_STEPS = [{"format": "PNG", "colors": c} for c in (256, 128, 64, 32)]
+# JPEG quality 88 to 82 at 4:4:4 (subsampling 0) first; 4:2:0 (subsampling 2) only when 4:4:4 cannot fit.
+JPEG_STEPS = [{"format": "JPEG", "quality": q, "subsampling": sub, "progressive": True}
+              for sub, qs in ((0, (88, 86, 84, 82)), (2, (86, 84, 82))) for q in qs]
+
+
+def _encode(im, step):
     from PIL import Image
-    im = Image.open(p).convert("RGB")
+    kw = dict(step)
+    colors = kw.pop("colors", None)
+    if colors:
+        im = im.quantize(colors=colors, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+    buf = io.BytesIO()
+    im.save(buf, optimize=True, **kw)
+    return buf.getvalue()
+
+
+def _fit(im, steps, budget):
+    """Best step that fits the budget; when even the last step is over, scale down and retry.
+    Returns (bytes, image). Scaling jumps by the size ratio (bytes track pixel count), never under 320 wide."""
+    from PIL import Image
+    while True:
+        for step in steps:
+            data = _encode(im, step)
+            if len(data) <= budget:
+                return data, im
+        k = min(.9, (budget / len(data)) ** .5 * .95)
+        if im.width <= 320:
+            return data, im
+        w = max(320, round(im.width * k))
+        im = im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
+
+
+def shrink(p, max_kb=600, width=None, crop_height=None):
+    """Re-encode a shot to fit max_kb. Flat UI and diagrams become a 256-color PNG; photographic shots
+    become a progressive JPEG, since a palette bands their gradients. Returns (bytes, [w, h], out_path).
+    The extension follows the format (.png or .jpg); when it changes, the old file is removed."""
+    from PIL import Image
+    with Image.open(p) as src:
+        im = src.convert("RGB")
     if width and im.width > width:
         im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
     if crop_height and im.height > crop_height:
         im = im.crop((0, 0, im.width, crop_height))
-    for colors in (256, 128, 64, 32):
-        q = im.quantize(colors=colors, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-        q.save(p, optimize=True)
-        if os.path.getsize(p) <= max_kb * 1024:
-            break
-    return os.path.getsize(p), list(im.size)
+    photo = im.getcolors(PHOTO_COLORS) is None
+    out = str(Path(p).with_suffix(".jpg" if photo else ".png"))
+    if os.path.abspath(out) != os.path.abspath(p) and os.path.exists(out):
+        raise FileExistsError(f"{out} already exists; move it or {p} first")
+    data, im = _fit(im, JPEG_STEPS if photo else PNG_STEPS, max_kb * 1024)
+    Path(out).write_bytes(data)
+    if os.path.abspath(out) != os.path.abspath(p):
+        os.remove(p)
+    return len(data), list(im.size), out
+
+
+def set_px(shot, size):
+    """Set a shot's px to the file's size, scaling its callout boxes with it (the page places hotspots in px
+    space). Returns True when anything changed."""
+    px = shot.get("px")
+    if px == size:
+        return False
+    if px and px[0]:
+        k = size[0] / px[0]
+        for c in shot.get("callouts") or []:
+            c["box"] = [round(v * k) for v in c["box"]]
+    shot["px"] = size
+    return True
+
+
+def update_shots(moves):
+    """After shrink: moves is [(old, new, [w, h])]. Point pack shots and crops at old to new and fix px and
+    callout boxes. Each pack is read once and saved only when it changed. Returns the projects touched."""
+    moves = {os.path.abspath(o): (os.path.abspath(n), size) for o, n, size in moves}
+    moves.update({n: (n, size) for n, size in list(moves.values())})
+    touched = []
+    for pk in all_packs():
+        hit = False
+        for _, s in pack_shots(pk):
+            m = moves.get(os.path.abspath(s.get("path") or ""))
+            if m:
+                hit |= s["path"] != m[0] or bool(s.pop("asset_url", None))  # the published copy is the old image
+                s["path"] = m[0]
+                hit |= set_px(s, m[1])
+            for c in s.get("callouts") or []:
+                cm = c.get("crop_path") and moves.get(os.path.abspath(c["crop_path"]))
+                if cm:
+                    hit |= c["crop_path"] != cm[0] or bool(c.pop("crop_url", None))
+                    c["crop_path"] = cm[0]
+        if hit:
+            save_pack(pk)
+            touched.append(pk["project"])
+    return touched
 
 
 def vendor(script, args):
@@ -1166,9 +1248,18 @@ def cmd_crop(a):
 
 
 def cmd_shrink(a):
-    for p in a.png:
-        size, px = shrink(p, a.max_kb, a.width, a.crop_height)
-        print(f"{p}: {size // 1024} KB, {px[0]}x{px[1]}" + ("  OVER 600 KB" if size > MAX_PNG else ""))
+    moves = []
+    try:
+        for p in a.image:
+            try:
+                size, px, out = shrink(p, a.max_kb, a.width, a.crop_height)
+            except FileExistsError as e:
+                die(str(e))
+            print(f"{out}: {size // 1024} KB, {px[0]}x{px[1]}" + (f"  OVER {a.max_kb} KB" if size > a.max_kb * 1024 else ""))
+            moves.append((p, out, px))
+    finally:  # record every finished move, even when a later image fails
+        for project in update_shots(moves):
+            print(f"pack {project}: shots updated")
 
 
 def cmd_viewed(a):
@@ -1180,7 +1271,7 @@ def cmd_viewed(a):
             if (did == a.id or a.id == "*") and os.path.abspath(s.get("path") or "") == target:
                 s["viewed"] = True
                 if os.path.isfile(target):
-                    s["px"] = png_size(target)
+                    set_px(s, png_size(target))
                 hit = True
         if hit:
             save_pack(pk)
@@ -1533,8 +1624,8 @@ def main(argv=None):
     p.set_defaults(fn=cmd_pair)
     p = sub.add_parser("crop", help="one close-up per callout")
     p.add_argument("input"); p.add_argument("callouts"); p.set_defaults(fn=cmd_crop)
-    p = sub.add_parser("shrink", help="256 colors, under 600 KB")
-    p.add_argument("png", nargs="+"); p.add_argument("--max-kb", type=int, default=600)
+    p = sub.add_parser("shrink", help="under 600 KB: 256-color PNG for flat UI, JPEG for photographic shots")
+    p.add_argument("image", nargs="+"); p.add_argument("--max-kb", type=int, default=600)
     p.add_argument("--width", type=int, default=1440); p.add_argument("--crop-height", type=int)
     p.set_defaults(fn=cmd_shrink)
     p = sub.add_parser("viewed", help="mark a shot as Read by the session")

@@ -33,7 +33,7 @@ Gated cards (checkout, pricing, new visuals, sign-in) need a before/after pair a
 
 ## Sizes
 - 1440 first, then 390. A UI card needs both widths for each role.
-- `decision-pack shrink` quantizes to 256 colors, keeps 1440 CSS px wide at DPR 1, and stays under 600 KB. Crop tall pages to the part that matters (`--crop-height`).
+- `decision-pack shrink` keeps 1440 CSS px wide at DPR 1 and stays under 600 KB. Flat UI and diagrams become a 256-color PNG; photographic shots (gradient heroes, photos, art) become a progressive JPEG so gradients do not band. It prints the output path, which may now end in `.jpg`, and repoints pack shots that used the old path. Shrink last, after `mark` and `pair`, and Read the shrunk file. Crop tall pages to the part that matters (`--crop-height`).
 
 ## Looks like prod (checklist)
 - No localhost bar, no dev overlays, no broken images, no lorem ipsum.

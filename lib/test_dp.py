@@ -685,9 +685,55 @@ class TestImages(Base):
         self.assertEqual(meta["px"], [1440, 900])
         dp.main(["crop", str(out), str(cj)])
         self.assertTrue((Path(self.tmp) / "crops" / "out-c3.png").exists())
-        size, px = dp.shrink(str(out))
-        self.assertLess(size, dp.MAX_PNG)
+        size, px, path = dp.shrink(str(out))
+        self.assertLess(size, dp.MAX_SHOT)
+        self.assertEqual(path, str(out))  # flat UI stays a 256-color PNG
 
+    def gradient(self, path, w=720, h=1200):
+        """A dark two-axis gradient, the hero art a 256-color palette bands."""
+        from PIL import Image, ImageChops
+        g = Image.linear_gradient("L")
+        x, y = g.rotate(90).resize((w, h)), g.resize((w, h))
+        Image.merge("RGB", (x, y, ImageChops.multiply(x, y))).save(path)
+        return path
+
+    def test_shrink_photo_to_jpeg(self):
+        src = self.gradient(Path(self.tmp) / "hero.png")
+        size, px, path = dp.shrink(str(src), max_kb=100)
+        self.assertTrue(path.endswith("hero.jpg"))
+        self.assertFalse(src.exists())
+        self.assertLessEqual(size, 100 * 1024)
+        from PIL import Image
+        with Image.open(path) as im:
+            self.assertEqual(im.format, "JPEG")
+            self.assertTrue(im.info.get("progressive"))
+            self.assertEqual(list(im.size), px)
+
+    def test_shrink_scales_to_fit_and_updates_pack(self):
+        src = self.gradient(Path(self.tmp) / "big.png")
+        pack = sample()
+        pack["project"] = "imgs"
+        shot = dp.all_shots(pack["decisions"][0])[0]
+        shot.update(path=str(src), px=[720, 1200], callouts=[{"n": 1, "box": [100, 200, 300, 400], "note": "x"}])
+        dp.save_pack(pack)
+        with redirect_stdout(io.StringIO()) as out:
+            dp.main(["shrink", str(src), "--max-kb", "15"])
+        self.assertIn("pack imgs: shots updated", out.getvalue())
+        s2 = dp.all_shots(dp.load_pack("imgs")["decisions"][0])[0]
+        self.assertTrue(s2["path"].endswith("big.jpg"))
+        self.assertLessEqual(os.path.getsize(s2["path"]), 15 * 1024)
+        self.assertLess(s2["px"][0], 720)
+        k = s2["px"][0] / 720
+        self.assertEqual(s2["callouts"][0]["box"], [round(v * k) for v in (100, 200, 300, 400)])
+
+    def test_shrink_keeps_an_existing_jpeg(self):
+        src = self.gradient(Path(self.tmp) / "hero.png")
+        other = Path(self.tmp) / "hero.jpg"
+        other.write_bytes(b"keep me")
+        with self.assertRaises(FileExistsError):
+            dp.shrink(str(src))
+        self.assertEqual(other.read_bytes(), b"keep me")
+        self.assertTrue(src.exists())
 
 if __name__ == "__main__":
     unittest.main()

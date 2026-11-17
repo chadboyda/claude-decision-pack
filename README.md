@@ -92,7 +92,7 @@ Under `home`:
 registry.json              project -> artifact URL, owner session, template version
 decisions.jsonl            every answer, append-only
 <project>/pack.json        source of truth for the cards
-<project>/shots/           PNGs, callouts, crops/
+<project>/shots/           PNG and JPEG shots, callouts, crops/
 <project>/seed/            ArtifactData batch files (made by seed/render)
 <project>/outbox/          page updates and response docs for the session to write
 <project>/local.html       view-only copy for zooming in a browser (never published)
