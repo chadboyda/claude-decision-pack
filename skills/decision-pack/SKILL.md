@@ -43,7 +43,7 @@ decision-pack shoot <url> --project <p> --name <n> --widths 1440 390 [--box sel]
 decision-pack mark <in.png> <callouts.json> <out.png>      # numbers burned in, writes <out>.callouts.json
 decision-pack pair <before.png> <after.png> <out.png> --title "Now|After"
 decision-pack crop <png> <callouts.json>                   # crops/<name>-c3.png
-decision-pack shrink <png>                                 # 256 colors, under 600 KB, 1440 wide
+decision-pack shrink <image>                               # under 600 KB, 1440 wide: PNG for flat UI, JPEG for photos
 ```
 **Read every PNG with the Read tool**, then `decision-pack viewed <ID> <png> --project <p>`. Callout notes say what the user sees and what happens next, 90 characters or fewer, no PR/ticket/file words.
 

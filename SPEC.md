@@ -264,7 +264,7 @@ Gated items (checkout, pricing, new visuals) must have a before/after `pair` at 
 - `decision-pack mark <in.png> <callouts.json> <out.png>` wraps vendored `annotate.py mark`. Numbers burned in. Legend stays on the card, not in the image. Writes `<out>.callouts.json`.
 - `decision-pack pair <before> <after> <out> --title "Now|After"` wraps `annotate.py pair`.
 - `decision-pack crop <png> <callouts.json>` writes one crop per callout (`<name>-c3.png`), so "callout 3" still points to the right spot if layout moves.
-- `decision-pack shrink <png>` PIL quantize to 256 colors; cap 600 KB; 1440 CSS px wide at DPR 1; tall pages cropped to the part that matters.
+- `decision-pack shrink <image>` caps each shot at 600 KB, 1440 CSS px wide at DPR 1; tall pages cropped to the part that matters. Flat UI and diagrams (4,096 colors or fewer) stay a 256-color PNG. Photographic shots (gradient heroes, photos, art) become a progressive JPEG, quality 88 to 82, 4:4:4 first and 4:2:0 only if needed, scaled down only when nothing else fits, because a palette bands them. Flat PNGs scale down the same way when 32 colors still do not fit. When the extension changes, the old file is removed and every pack shot that pointed at it is repointed (shrink refuses to overwrite a different file already at the new name); a scaled shot gets its `px` and callout boxes scaled too, and a shot whose image changed drops its `asset_url` so the new file is uploaded.
 - `decision-pack viewed <id> <png>` sets `viewed: true`. Run it only after the session has Read the PNG.
 - Vendored copies: `lib/vendor/shoot.py`, `lib/vendor/annotate.py`, `lib/vendor/_page.py`, pinned so an upstream change cannot break the plugin.
 
@@ -416,7 +416,7 @@ Blocks render and seed when any card has:
 - No `history_check`, or an exact `decisions.jsonl` hit with `result: none`.
 - No shot and no `no_visual_reason`. `no_visual_reason` on a decision that changes UI.
 - A UI shot with no 390 pair. A gated card with no before/after pair.
-- An unviewed shot. A missing file. A PNG over 600 KB. A localhost URL in pack.json.
+- An unviewed shot. A missing file. A shot over 600 KB. A localhost URL in pack.json.
 - A banned word in a callout note. A callout note over 90 characters.
 - A default on a one-way or gated card. A two-way card with a default but no `default_at_local`.
 - "update:", "was/now" or "Nov 12 update" text in any card field.
